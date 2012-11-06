@@ -3,12 +3,15 @@ package com.example.recordvoice;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
+import android.hardware.Camera.Size;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.media.MediaPlayer.OnCompletionListener;
@@ -16,6 +19,7 @@ import android.media.MediaScannerConnection.OnScanCompletedListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -29,6 +33,7 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
 	int limit = 5;	//次の画面へ移動するまでの秒
 	TextView tv2;
 	MediaPlayer mp;
+	int numberOfCameras; 
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,14 +50,29 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
         //終了ボタン（写真を撮る）
         button = (Button)this.findViewById(R.id.button1);
         button.setOnClickListener(this);
+        
+        // 利用可能なカメラの個数を取得
+ 	    numberOfCameras = Camera.getNumberOfCameras();
+ 	    System.out.println(numberOfCameras);
         //カメラをオープン
- 		camera = Camera.open(0);
+ 		camera = Camera.open(cameraDevicesNumber());
  		//プレビュー開始
  		camera.startPreview();
  		
- 		// 利用可能なカメラの個数を取得
- 	    int numberOfCameras = Camera.getNumberOfCameras();
- 	    System.out.println(numberOfCameras);
+ 		
+	}
+	
+	public Integer cameraDevicesNumber() {
+		Integer defaultCameraId = 0;
+		CameraInfo cameraInfo = new CameraInfo();
+		for (int i = 0; i < numberOfCameras; i++) {
+			Camera.getCameraInfo(i, cameraInfo);
+			if (cameraInfo.facing == CameraInfo.CAMERA_FACING_FRONT) {
+				defaultCameraId = i;
+			}
+		}
+		Log.d("cameraDevicesNumber()",defaultCameraId.toString());
+		return defaultCameraId;
 	}
 	
 	//コール音の再生
@@ -110,6 +130,26 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
     
 	//終了ボタンを押したとき(写真を撮る)
 	public void onClick(View v){
+		/* カメラテスト */ 
+		//カメラパラメータオブジェクトの取得
+		Camera.Parameters param = camera.getParameters();
+		//カメラのサイズを入れるインスタンス
+		Size pictureSize;
+		//端末がサポートするpictureサイズを取得する
+		List<Size> supportedPictureSizes = param.getSupportedPictureSizes();
+		int i = 0;
+		for (Size size : supportedPictureSizes) {
+			System.out.println("縦の長さ：" + supportedPictureSizes.get(i).height + " 横の長さ：" + supportedPictureSizes.get(i).width);
+			i++;
+		}
+		//縦の長さ480*横の長さ640
+		pictureSize = supportedPictureSizes.get(0);
+		//paramにサイズをセットする
+		param.setPictureSize(pictureSize.width, pictureSize.height);
+		//cameraにサイズをsetする
+		camera.setParameters(param);
+		
+		/* カメラテスト終了 */
 		//写真を撮った後、自動的にonPictureTaken()を呼び出す
         camera.takePicture(null,null,null,this);
     }
@@ -180,4 +220,5 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
         camera.release();
         camera=null;
 	}
+	
 }
