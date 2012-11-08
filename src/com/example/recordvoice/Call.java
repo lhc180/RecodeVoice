@@ -34,6 +34,8 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
 	TextView tv2;
 	MediaPlayer mp;
 	int numberOfCameras; 
+	Button button;	//写真を撮るボタン
+    public Camera camera;	//カメラオブジェクト
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,7 +61,6 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
  		//プレビュー開始
  		camera.startPreview();
  		
- 		
 	}
 	
 	public Integer cameraDevicesNumber() {
@@ -67,7 +68,7 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
 		CameraInfo cameraInfo = new CameraInfo();
 		for (int i = 0; i < numberOfCameras; i++) {
 			Camera.getCameraInfo(i, cameraInfo);
-			if (cameraInfo.facing == CameraInfo.CAMERA_FACING_FRONT) {
+			if (cameraInfo.facing == CameraInfo.CAMERA_FACING_BACK) {
 				defaultCameraId = i;
 			}
 		}
@@ -124,13 +125,10 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
 	}
 	
 	
-	
-	Button button;	//写真を撮るボタン
-    Camera camera;	//カメラオブジェクト
     
 	//終了ボタンを押したとき(写真を撮る)
 	public void onClick(View v){
-		/* カメラテスト */ 
+		/* 画像を保存するときの画像サイズを変更 */ 
 		//カメラパラメータオブジェクトの取得
 		Camera.Parameters param = camera.getParameters();
 		//カメラのサイズを入れるインスタンス
@@ -149,14 +147,15 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
 		//cameraにサイズをsetする
 		camera.setParameters(param);
 		
-		/* カメラテスト終了 */
+		/* 画像サイズ変更終了 */
 		//写真を撮った後、自動的にonPictureTaken()を呼び出す
-        camera.takePicture(null,null,null,this);
+        //camera.takePicture(null,null,null,this);
+		new Preview(this);
     }
 	
-	@Override
+	//@Override
 	//写真を撮った後、自動的に呼ばれる
-	public void onPictureTaken(byte[] data, Camera c) {
+	public void onPictureT(byte[] data, Camera c) {
 		try{
 			// SDカードのディレクトリ
 	        File dir = Environment.getExternalStorageDirectory();
@@ -219,6 +218,12 @@ public class Call extends Activity implements Camera.PictureCallback,OnClickList
         // カメラをリリース
         camera.release();
         camera=null;
+	}
+
+	@Override
+	public void onPictureTaken(byte[] data, Camera camera) {
+		// TODO 自動生成されたメソッド・スタブ
+		
 	}
 	
 }
